@@ -1,0 +1,20 @@
+# 1. Ignore specific files by name
+.env
+secret_token.txt
+
+# 2. Ignore an entire directory (must end with a slash)
+node_modules/
+build/
+dist/
+
+# 3. Ignore all files with a specific extension (using * wildcard)
+*.log
+*.sqlite3
+*.exe
+
+# 4. Create an exception (Ignore all .log files EXCEPT important.log)
+!important.log
+
+# 5. Ignore system-specific hidden files
+.DS_Store
+Thumbs.db

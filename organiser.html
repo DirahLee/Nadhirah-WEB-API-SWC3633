@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organiser Portal</title>
+    <style>
+        :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --primary: #0284c7; --border: #cbd5e1; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { margin-bottom: 24px; }
+        .tab-bar { display: flex; gap: 8px; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+        .tab-btn { background: none; border: none; padding: 10px 16px; font-size: 15px; cursor: pointer; color: #64748b; font-weight: 600; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background: #f1f5f9; color: #475569; }
+        button, input, select, textarea { font-family: inherit; font-size: 14px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); }
+        .btn-primary { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: 600; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; }
+        dialog { border: 1px solid var(--border); border-radius: 8px; padding: 20px; width: min(450px, 90vw); }
+        dialog::backdrop { background: rgba(0,0,0,0.4); }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; box-sizing: border-box; }
+        .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Portals Navigation Header -->
+        <div style="background:#1e293b; padding:10px 16px; border-radius:8px; margin-bottom:16px; display:flex; gap:12px; font-size:14px; align-items:center;">
+            <strong style="color:#fff;">Portals:</strong>
+            <a href="index.html" style="color:#60a5fa; text-decoration:none;">Admin (NUR NADHIRAH)</a> |
+            <a href="customer.html" style="color:#60a5fa; text-decoration:none;">Customer</a> |
+            <a href="organiser.html" style="color:#60a5fa; text-decoration:none;">Organiser</a>
+        </div>
+
+        <header>
+            <div>
+                <h1 style="margin:0;">Organiser Control Center</h1>
+                <p style="margin:4px 0 0; color:#64748b; font-size:14px;">Manage venues and publish upcoming events</p>
+            </div>
+        </header>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('events')">My Events</button>
+            <button class="tab-btn" onclick="switchTab('venues')">Venues</button>
+        </div>
+
+        <!-- Events Section -->
+        <div id="eventsSection">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0;">Published Events</h3>
+                <button class="btn-primary" onclick="openAddEventModal()">+ Create Event</button>
+            </div>
+            <div class="card" style="padding:0; overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Venue</th>
+                            <th>Date</th>
+                            <th>Price (MYR)</th>
+                            <th>Tickets</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTable"><tr><td colspan="6">Loading events...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Venues Section -->
+        <div id="venuesSection" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0;">Available Venues</h3>
+                <button class="btn-primary" onclick="document.getElementById('venueModal').showModal()">+ Add Venue</button>
+            </div>
+            <div class="card" style="padding:0; overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Location</th>
+                            <th>Capacity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="venuesTable"><tr><td colspan="4">Loading venues...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Event Modal -->
+    <dialog id="eventModal">
+        <form id="eventForm">
+            <h3 id="eventModalTitle" style="margin-top:0;">Create Event</h3>
+            <input type="hidden" id="evId">
+
+            <div class="form-group">
+                <label>Event Title</label>
+                <input type="text" id="evTitle" required>
+            </div>
+            <div class="form-group" id="descGroup">
+                <label>Description</label>
+                <textarea id="evDesc" rows="2"></textarea>
+            </div>
+            <div class="form-group" id="dateGroup">
+                <label>Date & Time</label>
+                <input type="datetime-local" id="evDate">
+            </div>
+            <div class="form-group" id="venueGroup">
+                <label>Venue</label>
+                <select id="evVenue"></select>
+            </div>
+            <div class="form-group" id="organiserGroup">
+                <label>Organiser Account</label>
+                <select id="evOrganiser"></select>
+            </div>
+            <div class="form-group">
+                <label>Ticket Price (MYR)</label>
+                <input type="number" step="0.01" id="evPrice" required>
+            </div>
+            <div class="form-group">
+                <label>Available Tickets</label>
+                <input type="number" id="evTickets" required>
+            </div>
+
+            <div class="actions">
+                <button type="button" onclick="document.getElementById('eventModal').close()">Cancel</button>
+                <button type="submit" class="btn-primary">Save Event</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Create Venue Modal -->
+    <dialog id="venueModal">
+        <form id="venueForm">
+            <h3 style="margin-top:0;">Add New Venue</h3>
+            <div class="form-group">
+                <label>Venue Name</label>
+                <input type="text" id="vName" required>
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="vLocation" required>
+            </div>
+            <div class="form-group">
+                <label>Capacity</label>
+                <input type="number" id="vCapacity" required>
+            </div>
+
+            <div class="actions">
+                <button type="button" onclick="document.getElementById('venueModal').close()">Cancel</button>
+                <button type="submit" class="btn-primary">Add Venue</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script>
+        let events = [];
+        let venues = [];
+        let users = [];
+
+        async function fetchAll() {
+            try {
+                const [eRes, vRes, uRes] = await Promise.all([
+                    fetch('events.php').then(r => r.json()),
+                    fetch('venues.php').then(r => r.json()),
+                    fetch('users.php').then(r => r.json())
+                ]);
+
+                if (eRes.status === 'success') events = eRes.data;
+                if (vRes.status === 'success') venues = vRes.data;
+                
+                if (uRes.status === 'success' && Array.isArray(uRes.data)) {
+                    // Case-insensitive filtering for organiser or admin roles
+                    users = uRes.data.filter(u => u.role && (u.role.toLowerCase() === 'organiser' || u.role.toLowerCase() === 'admin'));
+                    if (users.length === 0) {
+                        users = uRes.data; // Fallback to all users if no matching role found
+                    }
+                }
+
+                renderTables();
+            } catch (err) {
+                console.error('API Fetch Error:', err);
+            }
+        }
+
+        function renderTables() {
+            // Events table
+            document.getElementById('eventsTable').innerHTML = events.map(e => `
+                <tr>
+                    <td><strong>${e.title}</strong></td>
+                    <td>${e.venue_name || 'N/A'}</td>
+                    <td>${e.event_date}</td>
+                    <td>RM ${parseFloat(e.ticket_price).toFixed(2)}</td>
+                    <td>${e.available_tickets}</td>
+                    <td><button class="btn-sm" onclick="openEditEventModal(${e.event_id})">Edit</button></td>
+                </tr>
+            `).join('') || '<tr><td colspan="6">No events found.</td></tr>';
+
+            // Venues table
+            document.getElementById('venuesTable').innerHTML = venues.map(v => `
+                <tr>
+                    <td>${v.venue_id}</td>
+                    <td><strong>${v.name}</strong></td>
+                    <td>${v.location}</td>
+                    <td>${v.capacity} seats</td>
+                </tr>
+            `).join('') || '<tr><td colspan="4">No venues found.</td></tr>';
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (tab === 'events') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('eventsSection').style.display = 'block';
+                document.getElementById('venuesSection').style.display = 'none';
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('eventsSection').style.display = 'none';
+                document.getElementById('venuesSection').style.display = 'block';
+            }
+        }
+
+        function openAddEventModal() {
+            document.getElementById('eventModalTitle').textContent = "Create Event";
+            document.getElementById('evId').value = "";
+            document.getElementById('evTitle').value = "";
+            document.getElementById('evPrice').value = "";
+            document.getElementById('evTickets').value = "";
+            
+            // Show full fields for POST
+            document.getElementById('descGroup').style.display = 'block';
+            document.getElementById('dateGroup').style.display = 'block';
+            document.getElementById('venueGroup').style.display = 'block';
+            document.getElementById('organiserGroup').style.display = 'block';
+
+            document.getElementById('evVenue').innerHTML = venues.map(v => `<option value="${v.venue_id}">${v.name}</option>`).join('');
+            document.getElementById('evOrganiser').innerHTML = users.map(u => `<option value="${u.user_id}">${u.name}</option>`).join('');
+            document.getElementById('eventModal').showModal();
+        }
+
+        function openEditEventModal(id) {
+            const ev = events.find(x => x.event_id == id);
+            if (!ev) return;
+
+            document.getElementById('eventModalTitle').textContent = "Update Event";
+            document.getElementById('evId').value = ev.event_id;
+            document.getElementById('evTitle').value = ev.title;
+            document.getElementById('evPrice').value = ev.ticket_price;
+            document.getElementById('evTickets').value = ev.available_tickets;
+
+            // Hide fields not handled by PUT endpoint
+            document.getElementById('descGroup').style.display = 'none';
+            document.getElementById('dateGroup').style.display = 'none';
+            document.getElementById('venueGroup').style.display = 'none';
+            document.getElementById('organiserGroup').style.display = 'none';
+
+            document.getElementById('eventModal').showModal();
+        }
+
+        // Form Submission logic
+        document.getElementById('eventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('evId').value;
+            const isEdit = !!id;
+
+            let method = isEdit ? 'PUT' : 'POST';
+            let payload = isEdit ? {
+                event_id: parseInt(id),
+                title: document.getElementById('evTitle').value,
+                ticket_price: parseFloat(document.getElementById('evPrice').value),
+                available_tickets: parseInt(document.getElementById('evTickets').value)
+            } : {
+                title: document.getElementById('evTitle').value,
+                description: document.getElementById('evDesc').value,
+                event_date: document.getElementById('evDate').value.replace('T', ' ') + ':00',
+                venue_id: parseInt(document.getElementById('evVenue').value),
+                organiser_id: parseInt(document.getElementById('evOrganiser').value),
+                ticket_price: parseFloat(document.getElementById('evPrice').value),
+                available_tickets: parseInt(document.getElementById('evTickets').value)
+            };
+
+            const res = await fetch('events.php', {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(r => r.json());
+
+            document.getElementById('eventModal').close();
+            if (res.status === 'success') {
+                fetchAll();
+            } else {
+                alert(res.message);
+            }
+        });
+
+        document.getElementById('venueForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('vName').value,
+                location: document.getElementById('vLocation').value,
+                capacity: parseInt(document.getElementById('vCapacity').value)
+            };
+
+            const res = await fetch('venues.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(r => r.json());
+
+            document.getElementById('venueModal').close();
+            if (res.status === 'success') {
+                fetchAll();
+            } else {
+                alert(res.message);
+            }
+        });
+
+        fetchAll();
+    </script>
+</body>
+</html>

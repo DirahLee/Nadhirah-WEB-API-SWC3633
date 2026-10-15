@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ticketing Dashboard</title>
+    <style>
+        :root {
+            --bg: #edf0f4;
+            --card: #fff;
+            --ink: #16202e;
+            --mute: #5d6b7e;
+            --line: #d6dce5;
+            --accent: #2f4bdb;
+            --stub: #f2b632;
+            --danger: #c0392b;
+            --ok: #1f8a5b
+        }
+
+        @media (prefers-color-scheme:dark) {
+            :root {
+                --bg: #10151d;
+                --card: #19212c;
+                --ink: #e8edf4;
+                --mute: #97a4b5;
+                --line: #2c3746;
+                --accent: #7f95ff;
+                --stub: #f2b632;
+                --danger: #ff7b6b;
+                --ok: #4cc38a
+            }
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 15px/1.5 "Segoe UI", system-ui, sans-serif
+        }
+
+        header {
+            padding: 28px 24px 8px;
+            max-width: 1100px;
+            margin: auto
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            font-size: 26px
+        }
+
+        .sub {
+            color: var(--mute);
+            margin: 0
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px
+        }
+
+        .stat {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 16px;
+            min-width: 120px
+        }
+
+        .stat b {
+            display: block;
+            font-size: 22px
+        }
+
+        .stat span {
+            color: var(--mute);
+            font-size: 13px
+        }
+
+        nav {
+            max-width: 1100px;
+            margin: 16px auto 0;
+            padding: 0 24px;
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        nav button {
+            background: none;
+            border: 0;
+            border-bottom: 3px solid transparent;
+            padding: 10px 16px;
+            font: inherit;
+            color: var(--mute);
+            cursor: pointer
+        }
+
+        nav button[aria-selected=true] {
+            color: var(--ink);
+            border-bottom-color: var(--accent);
+            font-weight: 600
+        }
+
+        main {
+            max-width: 1100px;
+            margin: auto;
+            padding: 20px 24px 60px
+        }
+
+        .bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap
+        }
+
+        .bar h2 {
+            margin: 0;
+            font-size: 18px
+        }
+
+        button,
+        select,
+        input,
+        textarea {
+            font: inherit;
+            color: inherit
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: 0;
+            border-radius: 6px;
+            padding: 8px 14px;
+            cursor: pointer
+        }
+
+        .btn.ghost {
+            background: none;
+            color: var(--ink);
+            border: 1px solid var(--line)
+        }
+
+        .btn.danger {
+            background: none;
+            color: var(--danger);
+            border: 1px solid var(--danger)
+        }
+
+        .btn.small {
+            padding: 4px 10px;
+            font-size: 13px
+        }
+
+        button:focus-visible,
+        select:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px
+        }
+
+        select,
+        input,
+        textarea {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 8px 10px;
+            width: 100%
+        }
+
+        .bar select {
+            width: auto
+        }
+
+        /* ticket stubs */
+        .tickets {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 16px
+        }
+
+        .ticket {
+            display: flex;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            position: relative
+        }
+
+        .ticket .main {
+            flex: 1;
+            padding: 16px 18px;
+            min-width: 0
+        }
+
+        .ticket h3 {
+            margin: 0 0 6px;
+            font-size: 17px
+        }
+
+        .ticket p {
+            margin: 2px 0;
+            color: var(--mute);
+            font-size: 14px
+        }
+
+        .ticket .stub {
+            width: 150px;
+            padding: 16px 12px;
+            border-left: 2px dashed var(--line);
+            background: color-mix(in srgb, var(--stub) 18%, var(--card));
+            border-radius: 0 12px 12px 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: center
+        }
+
+        .ticket .stub::before,
+        .ticket .stub::after {
+            content: "";
+            position: absolute;
+            right: 138px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 1px solid var(--line)
+        }
+
+        .ticket .stub::before {
+            top: -10px
+        }
+
+        .ticket .stub::after {
+            bottom: -10px
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: 700
+        }
+
+        .left {
+            font-size: 13px;
+            color: var(--mute)
+        }
+
+        .left.low {
+            color: var(--danger);
+            font-weight: 600
+        }
+
+        .actions {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 4px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--line)
+        }
+
+        th {
+            font-size: 13px;
+            color: var(--mute);
+            font-weight: 600
+        }
+
+        .wrap {
+            overflow-x: auto
+        }
+
+        .empty {
+            padding: 32px;
+            text-align: center;
+            color: var(--mute);
+            background: var(--card);
+            border: 1px dashed var(--line);
+            border-radius: 8px
+        }
+
+        .pill {
+            padding: 2px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            border: 1px solid var(--line)
+        }
+
+        .pill.confirmed {
+            color: var(--ok);
+            border-color: var(--ok)
+        }
+
+        .pill.cancelled {
+            color: var(--danger);
+            border-color: var(--danger)
+        }
+
+        dialog {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--card);
+            color: var(--ink);
+            width: min(420px, 92vw);
+            padding: 20px
+        }
+
+        dialog::backdrop {
+            background: rgba(0, 0, 0, .5)
+        }
+
+        dialog h3 {
+            margin: 0 0 12px
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 4px;
+            font-size: 13px;
+            color: var(--mute)
+        }
+
+        .row {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 18px
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: var(--bg);
+            padding: 10px 18px;
+            border-radius: 8px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s
+        }
+
+        #toast.show {
+            opacity: 1
+        }
+
+        @media (max-width:520px) {
+            .tickets {
+                grid-template-columns: 1fr
+            }
+
+            .ticket {
+                flex-direction: column
+            }
+
+            .ticket .stub {
+                width: auto;
+                border-left: 0;
+                border-top: 2px dashed var(--line);
+                border-radius: 0 0 12px 12px
+            }
+
+            .ticket .stub::before,
+            .ticket .stub::after {
+                display: none
+            }
+        }
+
+        @media (prefers-reduced-motion:reduce) {
+            #toast {
+                transition: none
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="background:#1e293b; padding:10px 16px; border-radius:8px; margin-bottom:16px; display:flex; gap:12px; font-size:14px; align-items:center;">
+            <strong style="color:#fff;">Portals:</strong>
+            <a href="index.html" style="color:#60a5fa; text-decoration:none;">Admin (NUR NADHIRAH)</a> |
+            <a href="customer.html" style="color:#60a5fa; text-decoration:none;">Customer</a> |
+            <a href="organiser.html" style="color:#60a5fa; text-decoration:none;">Organiser</a>
+        </div>
+        <h1>Ticketing Dashboard</h1>
+        <p class="sub">Manage events, venues, users and bookings.</p>
+        <div class="stats" id="stats"></div>
+    </header>
+    <nav role="tablist" id="tabs"></nav>
+    <main id="view"></main>
+    <dialog id="dlg">
+        <form method="dialog" id="form"></form>
+    </dialog>
+    <div id="toast" role="status"></div>
+
+    <script>
+        const S = { events: [], venues: [], users: [], bookings: [], tab: 'events', currency: 'MYR', converted: {} };
+        const $ = s => document.querySelector(s);
+        const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        async function api(file, method = 'GET', body = null, qs = '') {
+            const res = await fetch(file + qs, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+            let json;
+            try { json = await res.json(); } catch { throw new Error('Server did not return JSON. Check ' + file); }
+            if (!res.ok || json.status !== 'success') throw new Error(json.message || 'Request failed');
+            return json;
+        }
+        function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800) }
+        async function run(fn, okMsg) { try { await fn(); if (okMsg) toast(okMsg); await load() } catch (e) { toast(e.message) } }
+
+        async function load() {
+            try {
+                const [e, v, u, b] = await Promise.all(['events', 'venues', 'users', 'bookings'].map(n => api(n + '.php')));
+                S.events = e.data; S.venues = v.data; S.users = u.data; S.bookings = b.data;
+                await convert();
+            } catch (err) { $('#view').innerHTML = `<div class="empty">Could not load data: ${esc(err.message)}<br>Check that Apache and MySQL (port 3307) are running.</div>`; return; }
+            render();
+        }
+        async function convert() {
+            S.converted = {};
+            if (S.currency === 'MYR') return;
+            await Promise.all(S.events.map(async ev => {
+                try {
+                    const r = await api('events.php', 'GET', null, `?id=${ev.event_id}&currency=${S.currency}`);
+                    if (r.data.ticket_price_converted !== undefined) S.converted[ev.event_id] = r.data.ticket_price_converted
+                } catch { }
+            }));
+        }
+
+        function render() {
+            const left = S.events.reduce((a, e) => a + Number(e.available_tickets), 0);
+            $('#stats').innerHTML = [['Events', S.events.length], ['Venues', S.venues.length], ['Users', S.users.length], ['Bookings', S.bookings.length], ['Tickets left', left]]
+                .map(([k, n]) => `<div class="stat"><b>${n}</b><span>${k}</span></div>`).join('');
+            $('#tabs').innerHTML = ['events', 'venues', 'users', 'bookings'].map(t => `<button role="tab" aria-selected="${S.tab === t}" data-tab="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('');
+            $('#view').innerHTML = { events: vEvents, venues: vVenues, users: vUsers, bookings: vBookings }[S.tab]();
+        }
+        $('#tabs').addEventListener('click', e => { const t = e.target.dataset.tab; if (t) { S.tab = t; render() } });
+
+        function bar(title, addLabel, addFn, extra = '') { return `<div class="bar"><h2>${title}</h2><div style="display:flex;gap:8px;align-items:center">${extra}<button class="btn" onclick="${addFn}">${addLabel}</button></div></div>` }
+        function table(heads, rows) {
+            if (!rows.length) return '<div class="empty">Nothing here yet. Add the first one with the button above.</div>';
+            return `<div class="wrap"><table><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+        }
+
+        function vEvents() {
+            const cur = `<select onchange="S.currency=this.value;run(()=>Promise.resolve())" aria-label="Currency">${['MYR', 'USD', 'SGD', 'EUR', 'GBP', 'JPY'].map(c => `<option ${c === S.currency ? 'selected' : ''}>${c}</option>`).join('')}</select>`;
+            const list = S.events.length ? `<div class="tickets">${S.events.map(e => {
+                const conv = S.converted[e.event_id];
+                const low = Number(e.available_tickets) <= 10;
+                return `<article class="ticket"><div class="main"><h3>${esc(e.title)}</h3>
+      <p>${esc(e.venue_name)}</p><p>${esc(e.event_date)}</p><p>Organiser: ${esc(e.organiser_name)}</p>${e.description ? `<p>${esc(e.description)}</p>` : ''}</div>
+      <div class="stub"><div class="price">RM ${Number(e.ticket_price).toFixed(2)}</div>${conv !== undefined ? `<div class="left">${S.currency} ${conv}</div>` : ''}
+      <div class="left ${low ? 'low' : ''}">${e.available_tickets} left</div>
+      <div class="actions"><button class="btn small" onclick="bookForm(${e.event_id})" ${Number(e.available_tickets) < 1 ? 'disabled' : ''}>Book</button>
+      <button class="btn danger small" onclick="del('events.php',${e.event_id},'Delete this event and its bookings?')">Delete</button></div></div></article>`
+            }).join('')}</div>`
+                : '<div class="empty">No events yet. Add the first one with the button above.</div>';
+            return bar('Events', 'Add event', 'eventForm()', cur) + list;
+        }
+        function vVenues() {
+            return bar('Venues', 'Add venue', 'venueForm()') + table(['Name', 'Location', 'Capacity', ''], S.venues.map(v =>
+                `<tr><td>${esc(v.name)}</td><td>${esc(v.location)}</td><td>${esc(v.capacity)}</td><td><button class="btn danger small" onclick="del('venues.php',${v.venue_id},'Delete this venue and its events?')">Delete</button></td></tr>`));
+        }
+        function vUsers() {
+            return bar('Users', 'Add user', 'userForm()') + table(['Name', 'Email', 'Role', 'Joined', ''], S.users.map(u =>
+                `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.role)}</td><td>${esc(u.created_at)}</td><td><button class="btn danger small" onclick="del('users.php',${u.user_id},'Delete this user?')">Delete</button></td></tr>`));
+        }
+        function vBookings() {
+            return bar('Bookings', 'New booking', 'bookForm()') + table(['#', 'Customer', 'Event', 'Qty', 'Total (MYR)', 'Status', ''], S.bookings.map(b =>
+                `<tr><td>${b.booking_id}</td><td>${esc(b.customer_name)}</td><td>${esc(b.event_title)}</td><td>${b.quantity}</td><td>${Number(b.total_price).toFixed(2)}</td>
+     <td><span class="pill ${esc(b.status)}">${esc(b.status)}</span></td>
+     <td style="white-space:nowrap">${b.status !== 'cancelled' ? `<button class="btn ghost small" onclick="setStatus(${b.booking_id},'cancelled')">Cancel</button> ` : ''}<button class="btn danger small" onclick="del('bookings.php',${b.booking_id},'Delete this booking?')">Delete</button></td></tr>`));
+        }
+
+        async function del(file, id, msg) { if (confirm(msg)) run(() => api(file, 'DELETE', null, '?id=' + id), 'Deleted'); }
+        function setStatus(id, status) { run(() => api('bookings.php', 'PUT', { booking_id: id, status }), 'Booking ' + status); }
+
+        /* generic modal form */
+        function openForm(title, fields, submitLabel, onSubmit) {
+            $('#form').innerHTML = `<h3>${title}</h3>` + fields.map(f => {
+                const id = 'f_' + f.name;
+                if (f.options) return `<label for="${id}">${f.label}</label><select id="${id}" ${f.required !== false ? 'required' : ''}>${f.options.map(o => `<option value="${esc(o[0])}" ${String(o[0]) === String(f.value) ? 'selected' : ''}>${esc(o[1])}</option>`).join('')}</select>`;
+                return `<label for="${id}">${f.label}</label><input id="${id}" type="${f.type || 'text'}" ${f.min !== undefined ? `min="${f.min}"` : ''} ${f.step ? `step="${f.step}"` : ''} value="${esc(f.value ?? '')}" ${f.required !== false ? 'required' : ''}>`;
+            }).join('') + `<div class="row"><button type="button" class="btn ghost" onclick="$('#dlg').close()">Cancel</button><button class="btn" type="submit">${submitLabel}</button></div>`;
+            $('#form').onsubmit = ev => { ev.preventDefault(); const d = {}; fields.forEach(f => d[f.name] = $('#f_' + f.name).value); $('#dlg').close(); onSubmit(d); };
+            $('#dlg').showModal();
+        }
+        const opt = (arr, id, label) => arr.map(x => [x[id], typeof label === 'function' ? label(x) : x[label]]);
+
+        function venueForm() {
+            openForm('Add venue', [{ name: 'name', label: 'Name' }, { name: 'location', label: 'Location' }, { name: 'capacity', label: 'Capacity', type: 'number', min: 1 }], 'Add venue',
+                d => run(() => api('venues.php', 'POST', d), 'Venue added'));
+        }
+        function userForm() {
+            openForm('Add user', [{ name: 'name', label: 'Name' }, { name: 'email', label: 'Email', type: 'email' }, { name: 'password', label: 'Password', type: 'password' },
+            { name: 'role', label: 'Role', options: [['customer', 'Customer'], ['organiser', 'Organiser'], ['admin', 'Admin']] }], 'Add user', d => run(() => api('users.php', 'POST', d), 'User added'));
+        }
+        function eventForm() {
+            if (!S.venues.length || !S.users.length) { toast('Add a venue and an organiser user first'); return }
+            openForm('Add event', [{ name: 'title', label: 'Title' }, { name: 'description', label: 'Description', required: false }, { name: 'event_date', label: 'Date and time', type: 'datetime-local' },
+            { name: 'venue_id', label: 'Venue', options: opt(S.venues, 'venue_id', 'name') }, { name: 'organiser_id', label: 'Organiser', options: opt(S.users, 'user_id', u => `${u.name} (${u.role})`) },
+            { name: 'ticket_price', label: 'Ticket price (MYR)', type: 'number', min: 0.01, step: '0.01' }, { name: 'available_tickets', label: 'Tickets available', type: 'number', min: 1 }], 'Add event',
+                d => { d.event_date = d.event_date.replace('T', ' ') + ':00'; run(() => api('events.php', 'POST', d), 'Event added') });
+        }
+        function bookForm(eventId) {
+            if (!S.users.length || !S.events.length) { toast('Add a user and an event first'); return }
+            openForm('Book tickets', [{ name: 'customer_id', label: 'Customer', options: opt(S.users, 'user_id', u => `${u.name} (${u.email})`) },
+            { name: 'event_id', label: 'Event', value: eventId, options: opt(S.events, 'event_id', e => `${e.title} (${e.available_tickets} left)`) },
+            { name: 'quantity', label: 'Quantity', type: 'number', min: 1, value: 1 }], 'Book',
+                d => run(async () => { const r = await api('bookings.php', 'POST', d); toast('Booked. Total RM ' + Number(r.total_price).toFixed(2)) }));
+        }
+        load();
+    </script>
+</body>
+
+</html>
